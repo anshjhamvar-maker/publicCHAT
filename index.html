@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LAN Chat (Public Serverless + Admin)</title>
+<title>LAN Chat (Live Public Version)</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
 <style>
-/* ── Theme Variables ── */
 :root[data-theme="dark"] {
   --bg: #0d0f14; --bg2: #13161e; --bg3: #1c2030; --border: #2a2f42;
   --text: #e8eaf0; --muted: #6b7194; --accent: #7c6af7; --accent2: #f76ab4;
@@ -21,12 +20,10 @@
   --bubble-me: linear-gradient(135deg,#5b4de8,#7c6af7); --bubble-them: #e8eaf4;
   --online: #22a06b; --danger: #d94f4f; --shadow: 0 8px 40px #0001;
 }
-
-/* ── Base Styles ── */
 *{box-sizing:border-box;margin:0;padding:0;transition:background .3s,color .3s}
 body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
 
-/* ── Auth Page ── */
+/* ── Auth ── */
 #auth-page{display:flex;align-items:center;justify-content:center;height:100vh;background:var(--bg)}
 .auth-box{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:48px 40px;width:360px;box-shadow:var(--shadow);animation:slideUp .5s ease}
 @keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
@@ -34,12 +31,14 @@ body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);height
 .auth-box p{color:var(--muted);font-size:.85rem;margin-bottom:28px;font-family:'Space Mono',monospace}
 .auth-box input{width:100%;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Syne',sans-serif;font-size:.95rem;margin-bottom:12px;outline:none}
 .auth-box input:focus{border-color:var(--accent)}
-.btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;margin-top:4px}
+.btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;cursor:pointer;margin-top:4px;letter-spacing:.5px}
 .btn:hover{opacity:.88;transform:translateY(-1px)}
 .err{color:var(--danger);font-size:.82rem;margin-bottom:8px;font-family:'Space Mono',monospace}
 
-/* ── App Shell & Sidebar ── */
+/* ── App Shell ── */
 #app-page{display:none;flex-direction:row;height:100vh}
+
+/* ── Sidebar ── */
 .sidebar{width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
 .sidebar-header{padding:20px 16px 12px;border-bottom:1px solid var(--border)}
 .sidebar-header .logo{font-size:1.3rem;font-weight:800;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
@@ -59,15 +58,17 @@ body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);height
 .icon-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;padding:4px}
 .icon-btn:hover{color:var(--text)}
 
-/* ── Main Chat Area ── */
+/* ── Main ── */
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .topbar{display:flex;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--bg2);gap:12px}
 .topbar h2{font-size:1.05rem;font-weight:800;flex:1}
 .topbar .meta{font-size:.78rem;color:var(--muted);font-family:'Space Mono',monospace}
 .theme-toggle{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:.75rem;font-family:'Space Mono',monospace;color:var(--text);font-weight:700}
-.messages-area{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
-.messages-area::-webkit-scrollbar{width:4px}
-.messages-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ── Messages ── */
+#messages-area{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+#messages-area::-webkit-scrollbar{width:4px}
+#messages-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
 .msg-row{display:flex;align-items:flex-end;gap:8px;animation:msgIn .25s ease}
 @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .msg-row.me{flex-direction:row-reverse}
@@ -78,26 +79,12 @@ body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);height
 .bubble .ts{display:block;font-size:.66rem;font-family:'Space Mono',monospace;margin-top:4px;opacity:.55}
 .bubble .sender-name{display:block;font-size:.72rem;font-weight:700;margin-bottom:3px;opacity:.75}
 
-/* ── Inputs & UI elements ── */
+/* ── Input ── */
 .input-bar{padding:14px 20px;border-top:1px solid var(--border);background:var(--bg2);display:flex;gap:10px;align-items:flex-end}
-.msg-input {flex:1;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;color:var(--text);font-family:'Syne',sans-serif;font-size:.95rem;outline:none;resize:none;max-height:120px;min-height:44px}
-.msg-input:focus {border-color:var(--accent)}
+#msg-input {flex:1;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;color:var(--text);font-family:'Syne',sans-serif;font-size:.95rem;outline:none;resize:none;max-height:120px;min-height:44px}
+#msg-input:focus {border-color:var(--accent)}
 .send-btn{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .send-btn:hover{opacity:.85;transform:scale(1.05)}
-
-/* DM Bar */
-#dm-to-bar{padding:6px 20px 0;background:var(--bg2);display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted);font-family:'Space Mono',monospace}
-#dm-to-bar select{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;font-family:'Space Mono',monospace;font-size:.8rem;cursor:pointer}
-
-/* Admin Table */
-.admin-scroll{flex:1;overflow-y:auto;padding:24px}
-.admin-table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
-.admin-table-wrap h3{padding:14px 18px;border-bottom:1px solid var(--border);font-size:.9rem;font-weight:800}
-table{width:100%;border-collapse:collapse}
-th,td{padding:10px 18px;text-align:left;font-size:.83rem;border-bottom:1px solid var(--border)}
-th{color:var(--muted);font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.5px;font-weight:400}
-.kick-btn{background:var(--danger);color:#fff;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:.7rem;font-family:'Space Mono',monospace;font-weight:700}
-.kick-btn:hover{opacity:.8}
 </style>
 </head>
 <body>
@@ -105,13 +92,12 @@ th{color:var(--muted);font-family:'Space Mono',monospace;font-size:.72rem;letter
 <div id="auth-page">
   <div class="auth-box">
     <h1>Web Chat</h1>
-    <p>// login required</p>
+    <p>// live public multiplayer</p>
     <div id="auth-err" class="err" style="display:none"></div>
     <div id="login-form">
-      <input id="username-input" type="text" placeholder="Username" autocomplete="off">
-      <input id="password-input" type="password" placeholder="Password" onkeydown="if(event.key==='Enter') login()">
-      <button class="btn" onclick="login()">Sign In</button>
-      <div style="text-align:center;margin-top:15px;font-size:0.75rem;color:var(--muted);">Use admin / admin123 for mod powers</div>
+      <input id="username-input" type="text" placeholder="Enter any username" autocomplete="off" onkeydown="if(event.key==='Enter') login()">
+      <button class="btn" onclick="login()">Join Chat</button>
+      <div style="text-align:center;margin-top:15px;font-size:0.75rem;color:var(--muted);">Zero setup required. Just jump in!</div>
     </div>
   </div>
 </div>
@@ -120,14 +106,11 @@ th{color:var(--muted);font-family:'Space Mono',monospace;font-size:.72rem;letter
   <div class="sidebar">
     <div class="sidebar-header">
       <div class="logo">⚡ Web Chat</div>
-      <div class="tagline">// decentralized</div>
+      <div class="tagline">// live multiplayer</div>
     </div>
     <div class="sidebar-nav">
       <div class="nav-label">CHANNELS</div>
-      <button class="nav-item active" id="nav-global" onclick="switchTab('global')">💬 Global Chat</button>
-      <button class="nav-item" id="nav-dm" onclick="switchTab('dm')">✉️ Direct Messages</button>
-      <button class="nav-item" id="nav-admin" onclick="switchTab('admin')" style="display:none">🛡️ Admin Panel</button>
-      
+      <button class="nav-item active">💬 Global Chat</button>
       <div class="nav-label" style="margin-top:12px">ONLINE NOW</div>
       <div class="online-list" id="online-list"></div>
     </div>
@@ -139,102 +122,59 @@ th{color:var(--muted);font-family:'Space Mono',monospace;font-size:.72rem;letter
   </div>
 
   <div class="main">
-    
     <div id="global-page" style="display:flex;flex-direction:column;height:100%">
       <div class="topbar">
         <h2>💬 Global Chat</h2>
         <span class="meta" id="online-count">0 online</span>
         <button class="theme-toggle" onclick="toggleTheme()">🌙 theme</button>
       </div>
-      <div class="messages-area" id="global-messages-area"></div>
+      <div id="messages-area"></div>
       <div class="input-bar">
-        <textarea class="msg-input" id="global-input" placeholder="Type a message…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault(); sendMsg('global');}"></textarea>
-        <button class="send-btn" onclick="sendMsg('global')">➤</button>
+        <textarea id="msg-input" placeholder="Type a message…" rows="1" onkeydown="handleKey(event)"></textarea>
+        <button class="send-btn" onclick="sendMsg()">➤</button>
       </div>
     </div>
-
-    <div id="dm-page" style="display:none;flex-direction:column;height:100%">
-      <div class="topbar">
-        <h2>✉️ Direct Messages</h2>
-        <button class="theme-toggle" onclick="toggleTheme()">🌙 theme</button>
-      </div>
-      <div id="dm-to-bar">
-        <span>To:</span>
-        <select id="dm-recipient">
-          <option value="">— select user —</option>
-        </select>
-      </div>
-      <div class="messages-area" id="dm-messages-area"></div>
-      <div class="input-bar">
-        <textarea class="msg-input" id="dm-input" placeholder="Send a DM…" rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault(); sendMsg('dm');}"></textarea>
-        <button class="send-btn" onclick="sendMsg('dm')">➤</button>
-      </div>
-    </div>
-
-    <div id="admin-page" style="display:none;flex-direction:column;height:100%">
-      <div class="topbar">
-        <h2>🛡️ Mod Dashboard</h2>
-        <button class="theme-toggle" onclick="toggleTheme()">🌙 theme</button>
-      </div>
-      <div class="admin-scroll">
-        <div class="admin-table-wrap">
-          <h3>Manage Connected Users</h3>
-          <table>
-            <thead><tr><th>Username</th><th>Action</th></tr></thead>
-            <tbody id="a-user-table"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
   </div>
 </div>
 
 <script>
 // ── Serverless Configuration ───────────────────────────────────────────────
-const ROOM_ID = "github-pages-chat-demo-v2"; 
+// We use a unique string so your chat room doesn't mix with other random people on the internet
+const ROOM_ID = "github-pages-chat-demo-99x88y77z"; 
 const MSG_TOPIC = ROOM_ID + "/messages";
 const PRESENCE_TOPIC = ROOM_ID + "/presence";
-const SYSTEM_TOPIC = ROOM_ID + "/system"; // For kicks
 
 let client;
 let currentUser = '';
-let isAdmin = false;
-let onlineUsers = {}; 
-let currentTab = 'global';
+let onlineUsers = {}; // Stores users and their last "ping" time
 
 let theme = localStorage.getItem('theme') || 'dark';
 document.documentElement.setAttribute('data-theme', theme);
 
+// ── Helpers ───────────────────────────────────────────────────────────────
 function nowStr() {
     const d = new Date();
     return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0');
 }
 function showErr(msg){ const e=document.getElementById('auth-err'); e.textContent=msg; e.style.display='block'; }
 
-// ── App Initialization & Auth ─────────────────────────────────────────────
+// ── App Initialization ────────────────────────────────────────────────────
 function login(){
   const u = document.getElementById('username-input').value.trim();
-  const p = document.getElementById('password-input').value.trim();
+  if(!u) return showErr('Please enter a username');
   
-  if(!u || !p) return showErr('Please enter username and password');
-  
-  // Honor-system authentication
   currentUser = u;
-  if(u === 'admin' && p === 'admin123') {
-      isAdmin = true;
-      document.getElementById('nav-admin').style.display = 'flex';
-  }
-
   document.getElementById('auth-page').style.display='none';
   document.getElementById('app-page').style.display='flex';
-  document.getElementById('my-username').textContent = (isAdmin ? '🛡️ ' : '') + u;
+  document.getElementById('my-username').textContent=u;
   document.getElementById('my-avatar').textContent=u[0].toUpperCase();
   
   connectToBroker();
 }
 
-function logout(){ location.reload(); }
+function logout(){
+  location.reload();
+}
 
 function toggleTheme(){
   theme = theme === 'dark' ? 'light' : 'dark';
@@ -242,92 +182,54 @@ function toggleTheme(){
   localStorage.setItem('theme',theme);
 }
 
-function switchTab(tab){
-  currentTab = tab;
-  document.getElementById('global-page').style.display = tab === 'global' ? 'flex' : 'none';
-  document.getElementById('dm-page').style.display = tab === 'dm' ? 'flex' : 'none';
-  document.getElementById('admin-page').style.display = tab === 'admin' ? 'flex' : 'none';
-  
-  ['global','dm','admin'].forEach(t=>{
-    const el = document.getElementById('nav-'+t);
-    if(el) el.classList.toggle('active', t === tab);
-  });
-}
-
 // ── Real-Time Networking Logic (MQTT) ─────────────────────────────────────
 function connectToBroker() {
+    // Connects to a free public message broker
     client = mqtt.connect('wss://broker.hivemq.com:8884/mqtt');
 
     client.on('connect', () => {
-        // Subscribe to Global, Presence, System (kicks), and a private DM channel
+        // Listen to our specific chat room channels
         client.subscribe(MSG_TOPIC);
         client.subscribe(PRESENCE_TOPIC);
-        client.subscribe(SYSTEM_TOPIC);
-        client.subscribe(ROOM_ID + "/dm/" + currentUser);
 
+        // Tell everyone we arrived, then ping every 5 seconds to stay "online"
         sendPresence();
         setInterval(sendPresence, 5000);
+        
+        // Check for users who disconnected every 5 seconds
         setInterval(cleanupPresence, 5000);
     });
 
+    // When anyone sends a message or presence ping
     client.on('message', (topic, message) => {
         const data = JSON.parse(message.toString());
         
-        // 1. Handle Kicks
-        if (topic === SYSTEM_TOPIC) {
-            if (data.action === 'kick' && data.target === currentUser) {
-                alert("You have been kicked by an admin.");
-                client.end(); // Disconnect
-                location.reload();
-            }
-        }
-        // 2. Handle Global Messages
-        else if (topic === MSG_TOPIC) {
-            const area = document.getElementById('global-messages-area');
+        if (topic === MSG_TOPIC) {
+            const area = document.getElementById('messages-area');
             const atBottom = area.scrollHeight - area.clientHeight <= area.scrollTop + 60;
             appendBubble(area, data, data.sender === currentUser);
             if(atBottom) area.scrollTop = area.scrollHeight;
         } 
-        // 3. Handle Private Direct Messages
-        else if (topic.startsWith(ROOM_ID + "/dm/")) {
-            const area = document.getElementById('dm-messages-area');
-            const atBottom = area.scrollHeight - area.clientHeight <= area.scrollTop + 60;
-            appendBubble(area, data, data.sender === currentUser);
-            if(atBottom) area.scrollTop = area.scrollHeight;
-        }
-        // 4. Handle Presence (Online Status)
         else if (topic === PRESENCE_TOPIC) {
+            // Update the last time we heard from this user
             onlineUsers[data.user] = Date.now();
             updateOnlineUI();
         }
     });
 }
 
-// ── Messaging Logic ───────────────────────────────────────────────────────
-function sendMsg(type){
-  const inpId = type === 'global' ? 'global-input' : 'dm-input';
-  const inp = document.getElementById(inpId);
+function handleKey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendMsg(); } }
+
+function sendMsg(){
+  const inp = document.getElementById('msg-input');
   const txt = inp.value.trim();
-  
   if(!txt || !client || !client.connected) return;
+  inp.value = '';
   
   const msg = { sender: currentUser, text: txt, time: nowStr() };
-
-  if (type === 'global') {
-      client.publish(MSG_TOPIC, JSON.stringify(msg));
-  } else if (type === 'dm') {
-      const recipient = document.getElementById('dm-recipient').value;
-      if (!recipient) return alert("Select someone to DM first!");
-      
-      // Send to their private topic
-      client.publish(ROOM_ID + "/dm/" + recipient, JSON.stringify(msg));
-      
-      // We also need to append it to our OWN screen so we see what we sent
-      const area = document.getElementById('dm-messages-area');
-      appendBubble(area, Object.assign(msg, {text: "To " + recipient + ": " + msg.text}), true);
-      area.scrollTop = area.scrollHeight;
-  }
-  inp.value = '';
+  
+  // Broadcast message to everyone
+  client.publish(MSG_TOPIC, JSON.stringify(msg));
 }
 
 function appendBubble(area, m, isMe){
@@ -343,7 +245,7 @@ function appendBubble(area, m, isMe){
   area.appendChild(row);
 }
 
-// ── Presence & Admin Logic ────────────────────────────────────────────────
+// ── Presence System (Who is online) ───────────────────────────────────────
 function sendPresence() {
     if(client && client.connected) {
         client.publish(PRESENCE_TOPIC, JSON.stringify({ user: currentUser }));
@@ -353,6 +255,8 @@ function sendPresence() {
 function cleanupPresence() {
     const now = Date.now();
     let changed = false;
+    
+    // If we haven't heard a ping from a user in 12 seconds, assume they left
     for (const user in onlineUsers) {
         if (now - onlineUsers[user] > 12000) {
             delete onlineUsers[user];
@@ -364,51 +268,15 @@ function cleanupPresence() {
 
 function updateOnlineUI() {
     const list = document.getElementById('online-list');
-    const dmSelect = document.getElementById('dm-recipient');
-    const adminTable = document.getElementById('a-user-table');
-    
-    // Save current DM selection so it doesn't reset
-    const currentDM = dmSelect.value;
-    
     list.innerHTML = '';
-    dmSelect.innerHTML = '<option value="">— select user —</option>';
-    if(isAdmin) adminTable.innerHTML = '';
-    
     const users = Object.keys(onlineUsers);
     
     users.forEach(u => {
-        // Sidebar list
         const el = document.createElement('div'); el.className='online-tag';
         el.innerHTML=`<span class="dot"></span>${u}`;
         list.appendChild(el);
-        
-        // DM Dropdown (don't add yourself)
-        if(u !== currentUser) {
-            const opt = document.createElement('option');
-            opt.value = u; opt.textContent = u;
-            if (u === currentDM) opt.selected = true;
-            dmSelect.appendChild(opt);
-        }
-
-        // Admin Table
-        if (isAdmin) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${u}</td>
-                <td>${u !== currentUser && u !== 'admin' ? `<button class="kick-btn" onclick="kickUser('${u}')">Kick</button>` : '-'}</td>
-            `;
-            adminTable.appendChild(tr);
-        }
     });
     document.getElementById('online-count').textContent = users.length + ' online';
-}
-
-function kickUser(username) {
-    if (!isAdmin || !client || !client.connected) return;
-    if (confirm(`Are you sure you want to kick ${username}?`)) {
-        // Broadcast the kick command to the system channel
-        client.publish(SYSTEM_TOPIC, JSON.stringify({ action: 'kick', target: username }));
-    }
 }
 </script>
 </body>
